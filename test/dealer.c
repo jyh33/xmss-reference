@@ -13,6 +13,9 @@
     #define XMSS_SIGNATURES 16
 #endif
 
+#define THRESHOLD_T 2
+#define THRESHOLD_N 3
+
 #ifdef XMSSMT
     #define XMSS_PARSE_OID xmssmt_parse_oid
     #define XMSS_STR_TO_OID xmssmt_str_to_oid
@@ -48,7 +51,7 @@ int main()
     unsigned long long smlen;
     unsigned long long mlen;
 
-    
+    unsigned char sk[XMSS_OID_LEN + params.sk_bytes];
 
     randombytes(m, XMSS_MLEN);
 
