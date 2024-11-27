@@ -48,6 +48,8 @@ int main()
     unsigned long long smlen;
     unsigned long long mlen;
 
+    
+
     randombytes(m, XMSS_MLEN);
 
     XMSS_KEYPAIR(pk, sk, oid);
