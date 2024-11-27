@@ -40,8 +40,6 @@ int main()
     int i;
 
 
-    //TODO
-
     // TODO test more different variants
     XMSS_STR_TO_OID(&oid, XMSS_VARIANT);
     XMSS_PARSE_OID(&params, oid);
