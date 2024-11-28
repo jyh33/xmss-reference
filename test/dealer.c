@@ -37,10 +37,9 @@ int main()
     xmss_params params;
     uint32_t oid;
     int ret = 0;
-    int i;
+    int THRESHOLD_DIVIDE;
 
-
-    //TODO
+    THRESHOLD_DIVIDE = fact(THRESHOLD_N) / (fact(THRESHOLD_T-1) * fact(THRESHOLD_N - THRESHOLD_T + 1));
 
     // TODO test more different variants
     XMSS_STR_TO_OID(&oid, XMSS_VARIANT);
@@ -53,6 +52,8 @@ int main()
     unsigned char *mout = malloc(params.sig_bytes + XMSS_MLEN);
     unsigned long long smlen;
     unsigned long long mlen;
+
+    unsigned char THRESHOLD_sk[THRESHOLD_DIVIDE][XMSS_OID_LEN + params.sk_bytes];
 
     unsigned char sk[XMSS_OID_LEN + params.sk_bytes];
 

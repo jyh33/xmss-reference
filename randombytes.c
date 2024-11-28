@@ -39,3 +39,22 @@ void randombytes(unsigned char *x, unsigned long long xlen)
         xlen -= i;
     }
 }
+
+int fact(int num)//求num的阶乘的函数
+//5=5*4！=5*（4*3*2*1）
+//4=4*3！=4*（3*2*1）
+//递归的思想，列出函数，直接对着写
+{
+	if (num < 0)
+	{
+		return 0;
+	}
+	if (num == 1||num == 0)
+	{
+		return 1;
+	}
+	if (num > 1)
+	{
+		return num * fact(num - 1);
+	}
+}
