@@ -6,6 +6,6 @@
  */
 void randombytes(unsigned char *x, unsigned long long xlen);
 
-int fact(int num);//求num的阶乘的函数
+int ts_fact(int num);//求num的阶乘的函数
 
 #endif

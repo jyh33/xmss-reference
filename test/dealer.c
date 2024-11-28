@@ -6,6 +6,7 @@
 #include "../xmss.h"
 #include "../params.h"
 #include "../randombytes.h"
+#include "../threshold.h"
 
 #define XMSS_MLEN 32
 
@@ -15,6 +16,7 @@
 
 #define THRESHOLD_T 2
 #define THRESHOLD_N 3
+#define THRESHOLD_KEY threshold_key_init
 
 #ifdef XMSSMT
     #define XMSS_PARSE_OID xmssmt_parse_oid
@@ -38,8 +40,9 @@ int main()
     uint32_t oid;
     int ret = 0;
     int THRESHOLD_DIVIDE;
+    int i;
 
-    THRESHOLD_DIVIDE = fact(THRESHOLD_N) / (fact(THRESHOLD_T-1) * fact(THRESHOLD_N - THRESHOLD_T + 1));
+    THRESHOLD_DIVIDE = ts_fact(THRESHOLD_N) / (ts_fact(THRESHOLD_T-1) * ts_fact(THRESHOLD_N - THRESHOLD_T + 1));
 
     // TODO test more different variants
     XMSS_STR_TO_OID(&oid, XMSS_VARIANT);
@@ -53,13 +56,16 @@ int main()
     unsigned long long smlen;
     unsigned long long mlen;
 
-    unsigned char THRESHOLD_sk[THRESHOLD_DIVIDE][XMSS_OID_LEN + params.sk_bytes];
-
-    unsigned char sk[XMSS_OID_LEN + params.sk_bytes];
-
     randombytes(m, XMSS_MLEN);
 
     XMSS_KEYPAIR(pk, sk, oid);
+
+    unsigned char THRESHOLD_sk[THRESHOLD_DIVIDE][XMSS_OID_LEN + params.sk_bytes];
+    for (i = 0; i < THRESHOLD_DIVIDE ; i++){
+        printf("Initing THRESHOLD_sk \n");
+        THRESHOLD_KEY(THRESHOLD_sk[i],oid);
+    }
+
 
     printf("Testing %d %s signatures.. \n", XMSS_SIGNATURES, XMSS_VARIANT);
 
