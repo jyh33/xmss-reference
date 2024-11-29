@@ -38,7 +38,7 @@ int main()
     uint32_t oid;
     int ret = 0;
     int i;
-
+    
 
     // TODO test more different variants
     XMSS_STR_TO_OID(&oid, XMSS_VARIANT);
