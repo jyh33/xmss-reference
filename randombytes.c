@@ -40,7 +40,7 @@ void randombytes(unsigned char *x, unsigned long long xlen)
     }
 }
 
-int fact(int num)//求num的阶乘的函数
+int ts_fact(int num)//求num的阶乘的函数
 //5=5*4！=5*（4*3*2*1）
 //4=4*3！=4*（3*2*1）
 //递归的思想，列出函数，直接对着写
@@ -55,6 +55,6 @@ int fact(int num)//求num的阶乘的函数
 	}
 	if (num > 1)
 	{
-		return num * fact(num - 1);
+		return num * ts_fact(num - 1);
 	}
 }
