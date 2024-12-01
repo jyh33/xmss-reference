@@ -41,12 +41,8 @@ int main()
     int ret = 0;
     int THRESHOLD_DIVIDE;
     int i;
-<<<<<<< HEAD
-    
-=======
 
     THRESHOLD_DIVIDE = ts_fact(THRESHOLD_N) / (ts_fact(THRESHOLD_T-1) * ts_fact(THRESHOLD_N - THRESHOLD_T + 1));
->>>>>>> 9d037d4f66d9f79c0b8d9307cc09afd2fa231a15
 
     // TODO test more different variants
     XMSS_STR_TO_OID(&oid, XMSS_VARIANT);
