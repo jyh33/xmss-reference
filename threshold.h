@@ -5,5 +5,7 @@
 
 void threshold_key_init();
 
+void threshold_part();
+
 
 #endif

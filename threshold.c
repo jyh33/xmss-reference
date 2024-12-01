@@ -40,48 +40,38 @@ void threshold_key_init(unsigned char sk,unsigned char *ts_sk, const uint32_t oi
 threshold_part_sign()
 
 
-/*
-int xmssmt_core_keypair(const xmss_params *params,
-                        unsigned char *pk, unsigned char *sk)
+
+int xmss_sign(unsigned char *sk,
+              unsigned char *sm, unsigned long long *smlen,
+              const unsigned char *m, unsigned long long mlen)
 {
-    unsigned char seed[3 * params->n];
+    xmss_params params;
+    uint32_t oid = 0;
+    unsigned int i;
 
-    randombytes(seed, 3 * params->n);
-    xmssmt_core_seed_keypair(params, pk, sk, seed);
-
-    return 0;
+    for (i = 0; i < XMSS_OID_LEN; i++) {
+        oid |= sk[XMSS_OID_LEN - i - 1] << (i * 8);
+    }
+    if (xmss_parse_oid(&params, oid)) {
+        return -1;
+    }
+    return xmss_core_sign(&params, sk + XMSS_OID_LEN, sm, smlen, m, mlen);
 }
-
-int xmssmt_core_seed_keypair(const xmss_params *params,
-                             unsigned char *pk, unsigned char *sk,
-                             unsigned char *seed)
+/**
+ * Signs a message. Returns an array containing the signature followed by the
+ * message and an updated secret key.
+ */
+int xmss_core_sign(const xmss_params *params,
+                   unsigned char *sk,
+                   unsigned char *sm, unsigned long long *smlen,
+                   const unsigned char *m, unsigned long long mlen)
 {
-    // We do not need the auth path in key generation, but it simplifies the
-    //   code to have just one treehash routine that computes both root and path
-    //   in one function.
-    unsigned char auth_path[params->tree_height * params->n];
-    uint32_t top_tree_addr[8] = {0};
-    set_layer_addr(top_tree_addr, params->d - 1);
-
-    // Initialize index to 0. 
-    memset(sk, 0, params->index_bytes);
-    sk += params->index_bytes;
-
-    // Initialize SK_SEED and SK_PRF. 
-    memcpy(sk, seed, 2 * params->n);
-
-    // Initialize PUB_SEED. 
-    memcpy(sk + 3 * params->n, seed + 2 * params->n,  params->n);
-    memcpy(pk + params->n, sk + 3*params->n, params->n);
-
-    // Compute root node of the top-most subtree. 
-    treehash(params, pk, auth_path, sk, pk + params->n, 0, top_tree_addr);
-    memcpy(sk + 2*params->n, pk, params->n);
-
-    return 0;
+    /* XMSS signatures are fundamentally an instance of XMSSMT signatures.
+       For d=1, as is the case with XMSS, some of the calls in the XMSSMT
+       routine become vacuous (i.e. the loop only iterates once, and address
+       management can be simplified a bit).*/
+    return xmssmt_core_sign(params, sk, sm, smlen, m, mlen);
 }
-*/
-
 
 /**
  * Signs a message. Returns an array containing the signature followed by the
