@@ -57,11 +57,14 @@ int main()
     unsigned long long smlen;
     unsigned long long mlen;
 
-    randombytes(m, XMSS_MLEN);
-
-     
-
     unsigned char THRESHOLD_sk[THRESHOLD_DIVIDE][XMSS_OID_LEN + params.sk_bytes];
+
+/*
+ * Generates a XMSS key pair for a given parameter set.
+ * Format sk: [(32bit) index || SK_SEED || SK_PRF || root || PUB_SEED]
+ * Format pk: [root || PUB_SEED], omitting algorithm OID.
+ */
+
     for (i = 0; i < THRESHOLD_DIVIDE ; i++){
         printf("Initing THRESHOLD_sk \n");
         THRESHOLD_KEY(THRESHOLD_sk[i],oid);
@@ -69,7 +72,7 @@ int main()
 
     THRESHOLD_PART()
 
-
+    randombytes(m, XMSS_MLEN);
 
     printf("Testing %d %s signatures.. \n", XMSS_SIGNATURES, XMSS_VARIANT);
 

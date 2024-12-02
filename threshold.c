@@ -37,11 +37,13 @@ void threshold_key_init(unsigned char sk,unsigned char *ts_sk, const uint32_t oi
 
 
 //门限参与方签名份额生成
-threshold_part_sign()
+threshold_part_divide(){
+
+}
 
 
-
-int xmss_sign(unsigned char *sk,
+//helper签名流程
+int threshold_sign(unsigned char *sk,
               unsigned char *sm, unsigned long long *smlen,
               const unsigned char *m, unsigned long long mlen)
 {
@@ -61,7 +63,7 @@ int xmss_sign(unsigned char *sk,
  * Signs a message. Returns an array containing the signature followed by the
  * message and an updated secret key.
  */
-int xmss_core_sign(const xmss_params *params,
+int threshold_core_sign(const xmss_params *params,
                    unsigned char *sk,
                    unsigned char *sm, unsigned long long *smlen,
                    const unsigned char *m, unsigned long long mlen)
@@ -77,7 +79,7 @@ int xmss_core_sign(const xmss_params *params,
  * Signs a message. Returns an array containing the signature followed by the
  * message and an updated secret key.
  */
-int xmssmt_core_sign(const xmss_params *params,
+int thresholdmt_core_sign(const xmss_params *params,
                      unsigned char *sk,
                      unsigned char *sm, unsigned long long *smlen,
                      const unsigned char *m, unsigned long long mlen)
