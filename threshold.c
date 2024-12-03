@@ -2,6 +2,14 @@
 
 #include "params.h"
 #include "threshold.h"
+#include "hash.h"
+#include "hash_address.h"
+#include "params.h"
+#include "randombytes.h"
+#include "wots.h"
+#include "utils.h"
+#include "xmss_commons.h"
+#include "xmss_core.h"
 
 
 /*
@@ -37,10 +45,29 @@ void threshold_key_init(unsigned char sk,unsigned char *ts_sk, const uint32_t oi
 
 
 //门限参与方签名份额生成
-threshold_part_divide(){
+threshold_part_divide(unsigned char *sk, unsigned char *ts_sk, int size, ){
 
 }
 
+void wots_sign(const xmss_params *params,
+               unsigned char *sig, const unsigned char *msg,
+               const unsigned char *seed, const unsigned char *pub_seed,
+               uint32_t addr[8])
+{
+    int lengths[params->wots_len];
+    uint32_t i;
+
+    chain_lengths(params, lengths, msg);
+
+    /* The WOTS+ private key is derived from the seed. */
+    expand_seed(params, sig, seed, pub_seed, addr);
+
+    for (i = 0; i < params->wots_len; i++) {
+        set_chain_addr(addr, i);
+        gen_chain(params, sig + i*params->n, sig + i*params->n,
+                  0, lengths[i], pub_seed, addr);
+    }
+}
 
 //helper签名流程
 int threshold_sign(unsigned char *sk,
@@ -57,7 +84,7 @@ int threshold_sign(unsigned char *sk,
     if (xmss_parse_oid(&params, oid)) {
         return -1;
     }
-    return xmss_core_sign(&params, sk + XMSS_OID_LEN, sm, smlen, m, mlen);
+    return threshold_core_sign(&params, sk + XMSS_OID_LEN, sm, smlen, m, mlen);
 }
 /**
  * Signs a message. Returns an array containing the signature followed by the
@@ -72,7 +99,7 @@ int threshold_core_sign(const xmss_params *params,
        For d=1, as is the case with XMSS, some of the calls in the XMSSMT
        routine become vacuous (i.e. the loop only iterates once, and address
        management can be simplified a bit).*/
-    return xmssmt_core_sign(params, sk, sm, smlen, m, mlen);
+    return thresholdmt_core_sign(params, sk, sm, smlen, m, mlen);
 }
 
 /**
