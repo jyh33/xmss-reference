@@ -41,9 +41,11 @@ int main()
     uint32_t oid;
     int ret = 0;
     int THRESHOLD_DIVIDE;
+    int THRESHOLD_EACH_SEED;
     int i;
 
     THRESHOLD_DIVIDE = ts_fact(THRESHOLD_N) / (ts_fact(THRESHOLD_T-1) * ts_fact(THRESHOLD_N - THRESHOLD_T + 1));
+    THRESHOLD_EACH_SEED = THRESHOLD_DIVIDE - ts_fact(THRESHOLD_N-1) / (ts_fact(THRESHOLD_T-2) * ts_fact(THRESHOLD_N - THRESHOLD_T + 1));
 
     // TODO test more different variants
     XMSS_STR_TO_OID(&oid, XMSS_VARIANT);

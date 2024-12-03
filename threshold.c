@@ -44,9 +44,18 @@ void threshold_key_init(unsigned char sk,unsigned char *ts_sk, const uint32_t oi
 } 
 
 
-//门限参与方签名份额生成
-threshold_part_divide(unsigned char *sk, unsigned char *ts_sk, int size, ){
+//门限种子分配，我们一共有C(n,t−1)份种子，每人C(n−1,t−2)个种子
+void threshold_part_divide(unsigned char *ts_in_sk, unsigned char *ts_out_sk, 
+                        int size, int each_seed)
+{
 
+}
+
+//门限参与方签名份额生成，helper的份额产生并按行存入wots_file与path_file当中
+void threshold_helper_divide(unsigned char sk, unsigned char *ts_sk, 
+                        int size, int each_seed, File *wots_file, File *path_file)
+{
+    
 }
 
 void wots_sign(const xmss_params *params,
