@@ -19,7 +19,7 @@
  */
 //建立每个份额的随机数种子
 
-void threshold_key_init(unsigned char sk,unsigned char *ts_sk, const uint32_t oid){
+void threshold_key_init(unsigned char sk,unsigned char **ts_sk, const uint32_t oid){
 
     xmss_params params;
     unsigned int i;
@@ -49,8 +49,8 @@ void threshold_part_divide(unsigned char *ts_in_sk, unsigned char *ts_out_sk,
                         int size, int each_seed);
 
 //门限参与方签名份额生成，helper的份额产生并按行存入wots_file与path_file当中
-int threshold_helper_divide(unsigned char sk, unsigned char *ts_sk, 
-                        int size, int each_seed, FILE *hleper_file)
+int threshold_helper_divide(unsigned char sk, unsigned char **ts_sk, 
+                        int size, FILE *hleper_file)
 {
     xmss_params params;
     uint32_t oid = 0;
@@ -76,7 +76,10 @@ int threshold_helper_divide(unsigned char sk, unsigned char *ts_sk,
 //[index || first_tree_sign_full_Matrix || first_tree_path || 2th_tree_sign || 2th_tree_path || ...... ]
     unsigned char helper_cache[params->index_bytes 
                          + (params->d - 1) * params->wots_sig_bytes
-                         + params->full_height * params->n + params->wots_w * params->wots_sig_bytes]
+                         + params->full_height * params->n + params->wots_w * params->wots_sig_bytes];
+    unsigned char helper_buff[params->index_bytes 
+                         + (params->d - 1) * params->wots_sig_bytes
+                         + params->full_height * params->n + params->wots_w * params->wots_sig_bytes];
 
     unsigned char root[params->n];
     unsigned char *mhash = root;
@@ -126,6 +129,7 @@ int threshold_helper_divide(unsigned char sk, unsigned char *ts_sk,
         }
         
         memcpy(helper_cache, sk, params->index_bytes);
+        memcpy(helper_buff, sk, params->index_bytes);
 
         /*************************************************************************
          * THIS IS WHERE PRODUCTION IMPLEMENTATIONS WOULD UPDATE THE SECRET KEY. *
@@ -161,18 +165,48 @@ int threshold_helper_divide(unsigned char sk, unsigned char *ts_sk,
             of the subtree below the currently processed subtree. */
             if(i==0){
                 wots_sign(params, helper_cache + params->index_bytes, sk_seed, pub_seed, ots_addr);
-                helper_cache += params-> *params->wots_sig_bytes;
+//                helper_cache += params-> *params->wots_sig_bytes;
             }
             else{
-                wots_sign(params, helper_cache, root, sk_seed, pub_seed, ots_addr);
-                helper_cache += params-> *params->wots_sig_bytes;
+                wots_sign(params, helper_cache + params->index_bytes + params->wots_w * params->wots_sig_bytes + params->tree_height*params->n*i + params->wots_sig_bytes*(i-1) , root, sk_seed, pub_seed, ots_addr);
+//                helper_cache += params-> *params->wots_sig_bytes;
             }
 
             /* Compute the authentication path for the used WOTS leaf. */
-            treehash(params, root, helper_cache, sk_seed, pub_seed, idx_leaf, ots_addr);
-            sm += params->tree_height*params->n;            
+            treehash(params, root, helper_cache + params->index_bytes + params->wots_w * params->wots_sig_bytes + params->tree_height*params->n*i + params->wots_sig_bytes*i , sk_seed, pub_seed, idx_leaf, ots_addr);
+//            sm += params->tree_height*params->n;            
         }
+        for (i=0; i < size; i++){
+            idx_leaf = (idx & ((1 << params->tree_height)-1));
+            idx = idx >> params->tree_height;
+            sk_seed = ts_sk[i] + params->index_bytes;
+
+            set_layer_addr(ots_addr, i);
+            set_tree_addr(ots_addr, idx);
+            set_ots_addr(ots_addr, idx_leaf);
+
+            /* Compute a WOTS signature. */
+            /* Initially, root = mhash, but on subsequent iterations it is the root
+            of the subtree below the currently processed subtree. */
+            if(i==0){
+                wots_sign(params, helper_buff + params->index_bytes, sk_seed, pub_seed, ots_addr);
+//                helper_cache += params-> *params->wots_sig_bytes;
+            }
+            else{
+                wots_sign(params, helper_buff + params->index_bytes + params->wots_w * params->wots_sig_bytes + params->tree_height*params->n*i + params->wots_sig_bytes*(i-1) , root, sk_seed, pub_seed, ots_addr);
+//                helper_cache += params-> *params->wots_sig_bytes;
+            }
+
+            /* Compute the authentication path for the used WOTS leaf. */
+            treehash(params, root, helper_buff + params->index_bytes + params->wots_w * params->wots_sig_bytes + params->tree_height*params->n*i + params->wots_sig_bytes*i , sk_seed, pub_seed, idx_leaf, ots_addr);
+//            sm += params->tree_height*params->n;            
+        }
+        helper_cache + params->index_bytes = (helper_cache + params->index_bytes) ^ (helper_buff + params->index_bytes)
     }
+    fwrite(numbers, sizeof(unsigned char), params->index_bytes 
+                         + (params->d - 1) * params->wots_sig_bytes
+                         + params->full_height * params->n + params->wots_w * params->wots_sig_bytes, hleper_file);
+    fputc('\n', file);
     return 0;
 }
 
@@ -193,7 +227,7 @@ void wots_sign_all(const xmss_params *params,
         set_lengths(lengths, j);
         for (i = 0; i < params->wots_len; i++) {
             set_chain_addr(addr, i);
-            gen_chain(params, sig + i*params->n, exp_seed + i*params->n,
+            gen_chain(params, sig + i*params->n + j * params->wots_len * params->n, exp_seed + i*params->n,
                     0, lengths[i], pub_seed, addr);
         }
     }
