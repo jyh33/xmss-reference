@@ -53,7 +53,7 @@ void threshold_part_divide(unsigned char *ts_in_sk, unsigned char *ts_out_sk,
 
 //门限参与方签名份额生成，helper的份额产生并按行存入wots_file与path_file当中
 int threshold_helper_divide(unsigned char sk, unsigned char *ts_sk, 
-                        int size, int each_seed)
+                        int size, int each_seed, FILE *hleper_file)
 {
     xmss_params params;
     uint32_t oid = 0;
@@ -70,6 +70,16 @@ int threshold_helper_divide(unsigned char sk, unsigned char *ts_sk,
     const unsigned char *sk_prf = sk + params->index_bytes + params->n;
     const unsigned char *pub_root = sk + params->index_bytes + 2*params->n;
     const unsigned char *pub_seed = sk + params->index_bytes + 3*params->n;
+
+/*      
+    params->sig_bytes = (params->index_bytes + params->n
+                         + params->d * params->wots_sig_bytes
+                         + params->full_height * params->n);
+*/
+//[index || first_tree_path || 2th_tree_sign || 2th_tree_path || ...... || first_tree_sign_full_Matrix]
+    unsigned char helper_cache[params->index_bytes 
+                         + (params->d - 1) * params->wots_sig_bytes
+                         + params->full_height * params->n + params->wots_w * params->wots_sig_bytes]
 
     unsigned char root[params->n];
     unsigned char *mhash = root;
@@ -88,74 +98,77 @@ int threshold_helper_divide(unsigned char sk, unsigned char *ts_sk,
 
 
 
-//while()
-    /* Read and use the current index from the secret key. */
-    idx = (unsigned long)bytes_to_ull(sk, params->index_bytes);
-    
-    /* Check if we can still sign with this sk.
-     * If not, return -2
-     * 
-     * If this is the last possible signature (because the max index value 
-     * is reached), production implementations should delete the secret key 
-     * to prevent accidental further use.
-     * 
-     * For the case of total tree height of 64 we do not use the last signature 
-     * to be on the safe side (there is no index value left to indicate that the 
-     * key is finished, hence external handling would be necessary)
-     */ 
+    for(bool sk_flag = True; sk_flag ; ){
 
-    /*
-    if (idx >= ((1ULL << params->full_height) - 1)) {
-        // Delete secret key here. We only do this in memory, production code
-        // has to make sure that this happens on disk.
-        memset(sk, 0xFF, params->index_bytes);
-        memset(sk + params->index_bytes, 0, (params->sk_bytes - params->index_bytes));
-        if (idx > ((1ULL << params->full_height) - 1))
-            return -2; // We already used all one-time keys
-        if ((params->full_height == 64) && (idx == ((1ULL << params->full_height) - 1))) 
-                return -2; // We already used all one-time keys
-    }
-    */
-//    memcpy(sm, sk, params->index_bytes);
+        /* Read and use the current index from the secret key. */
+        idx = (unsigned long)bytes_to_ull(sk, params->index_bytes);
+        
+        /* Check if we can still sign with this sk.
+        * If not, return -2
+        * 
+        * If this is the last possible signature (because the max index value 
+        * is reached), production implementations should delete the secret key 
+        * to prevent accidental further use.
+        * 
+        * For the case of total tree height of 64 we do not use the last signature 
+        * to be on the safe side (there is no index value left to indicate that the 
+        * key is finished, hence external handling would be necessary)
+        */ 
 
-    /*************************************************************************
-     * THIS IS WHERE PRODUCTION IMPLEMENTATIONS WOULD UPDATE THE SECRET KEY. *
-     *************************************************************************/
-    /* Increment the index in the secret key. */
-    ull_to_bytes(sk, params->index_bytes, idx + 1);
+        
+        if (idx >= ((1ULL << params->full_height) - 1)) {
+            // Delete secret key here. We only do this in memory, production code
+            // has to make sure that this happens on disk.
+        //    memset(sk, 0xFF, params->index_bytes);
+        //    memset(sk + params->index_bytes, 0, (params->sk_bytes - params->index_bytes));
+            ull_to_bytes(sk, params->index_bytes, 0);
+            if (idx > ((1ULL << params->full_height) - 1))
+                break; // We already used all one-time keys
+            if ((params->full_height == 64) && (idx == ((1ULL << params->full_height) - 1))) 
+                break; // We already used all one-time keys
+        }
+        
+    //    memcpy(sm, sk, params->index_bytes);
 
-    /* Compute the digest randomization value. */
-    ull_to_bytes(idx_bytes_32, 32, idx);
-    prf(params, sm + params->index_bytes, idx_bytes_32, sk_prf);
+        /*************************************************************************
+         * THIS IS WHERE PRODUCTION IMPLEMENTATIONS WOULD UPDATE THE SECRET KEY. *
+         *************************************************************************/
+        /* Increment the index in the secret key. */
+        ull_to_bytes(sk, params->index_bytes, idx + 1);
 
-    /* Compute the message hash. 
-    hash_message(params, mhash, sm + params->index_bytes, pub_root, idx,
-                 sm + params->sig_bytes - params->padding_len - 3*params->n,
-                 mlen);
-    sm += params->index_bytes + params->n;
-    */
-    set_type(ots_addr, XMSS_ADDR_TYPE_OTS);
+        /* Compute the digest randomization value. */
+        ull_to_bytes(idx_bytes_32, 32, idx);
+        prf(params, sm + params->index_bytes, idx_bytes_32, sk_prf);
+
+        /* Compute the message hash. 
+        hash_message(params, mhash, sm + params->index_bytes, pub_root, idx,
+                    sm + params->sig_bytes - params->padding_len - 3*params->n,
+                    mlen);
+        sm += params->index_bytes + params->n;
+        */
+        set_type(ots_addr, XMSS_ADDR_TYPE_OTS);
 
 
+// [index || first_tree_path || 2th_tree_sign || 2th_tree_path || ...... || first_tree_sign_full_Matrix]
+        for (i = 0; i < params->d; i++) {
+            idx_leaf = (idx & ((1 << params->tree_height)-1));
+            idx = idx >> params->tree_height;
 
-    for (i = 0; i < params->d; i++) {
-        idx_leaf = (idx & ((1 << params->tree_height)-1));
-        idx = idx >> params->tree_height;
+            set_layer_addr(ots_addr, i);
+            set_tree_addr(ots_addr, idx);
+            set_ots_addr(ots_addr, idx_leaf);
 
-        set_layer_addr(ots_addr, i);
-        set_tree_addr(ots_addr, idx);
-        set_ots_addr(ots_addr, idx_leaf);
+            /* Compute a WOTS signature. */
+            /* Initially, root = mhash, but on subsequent iterations it is the root
+            of the subtree below the currently processed subtree. */
+            wots_sign(params, sm, root, sk_seed, pub_seed, ots_addr);
+            sm += params->wots_sig_bytes;   
 
-        /* Compute a WOTS signature. */
-        /* Initially, root = mhash, but on subsequent iterations it is the root
-           of the subtree below the currently processed subtree. */
-        wots_sign(params, sm, root, sk_seed, pub_seed, ots_addr);
-        sm += params->wots_sig_bytes;   
-
-        /* Compute the authentication path for the used WOTS leaf. */
-        treehash(params, root, sm, sk_seed, pub_seed, idx_leaf, ots_addr);
-        sm += params->tree_height*params->n;     
-    
+            /* Compute the authentication path for the used WOTS leaf. */
+            treehash(params, root, sm, sk_seed, pub_seed, idx_leaf, ots_addr);
+            sm += params->tree_height*params->n;     
+        
+        }
     }
 
     return 0;
