@@ -57,4 +57,7 @@ int ts_fact(int num)//求num的阶乘的函数
 	{
 		return num * ts_fact(num - 1);
 	}
+    else{
+        return -1;
+    }
 }

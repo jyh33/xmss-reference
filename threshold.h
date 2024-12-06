@@ -3,7 +3,7 @@
 
 #include "params.h"
 
-void threshold_key_init(unsigned char *sk,unsigned char *ts_sk, const uint32_t oid);
+int threshold_key_init(unsigned char *sk,unsigned char *ts_sk, const uint32_t oid);
 
 void threshold_part_divide(unsigned char *ts_in_sk, unsigned char *ts_out_sk, 
                         int size, int each_seed);
