@@ -11,7 +11,7 @@
  * Helper method for pseudorandom key generation.
  * Expands an n-byte array into a len*n byte array using the `prf_keygen` function.
  */
-static void expand_seed(const xmss_params *params,
+void expand_seed(const xmss_params *params,
                         unsigned char *outseeds, const unsigned char *inseed, 
                         const unsigned char *pub_seed, uint32_t addr[8])
 {
@@ -35,7 +35,7 @@ static void expand_seed(const xmss_params *params,
  * Interprets in as start-th value of the chain.
  * addr has to contain the address of the chain.
  */
-static void gen_chain(const xmss_params *params,
+void gen_chain(const xmss_params *params,
                       unsigned char *out, const unsigned char *in,
                       unsigned int start, unsigned int steps,
                       const unsigned char *pub_seed, uint32_t addr[8])

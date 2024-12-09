@@ -74,7 +74,7 @@ int xmssmt_core_sign_open(const xmss_params *params,
                           const unsigned char *sm, unsigned long long smlen,
                           const unsigned char *pk);
 
-static void treehash(const xmss_params *params,
+void treehash(const xmss_params *params,
                      unsigned char *root, unsigned char *auth_path,
                      const unsigned char *sk_seed,
                      const unsigned char *pub_seed,

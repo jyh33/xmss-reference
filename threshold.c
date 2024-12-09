@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "params.h"
 #include "threshold.h"
 #include "hash.h"
 #include "hash_address.h"
