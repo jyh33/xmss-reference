@@ -13,7 +13,74 @@
 #include "xmss_commons.h"
 #include "xmss_core.h"
 
+static treehash(const xmss_params *params,
+                     unsigned char *root, unsigned char *auth_path,
+                     const unsigned char *sk_seed,
+                     const unsigned char *pub_seed,
+                     uint32_t leaf_idx, const uint32_t subtree_addr[8])
+{
+    unsigned char stack[(params->tree_height+1)*params->n];
+    unsigned int heights[params->tree_height+1];
+    unsigned int offset = 0;
 
+    /* The subtree has at most 2^20 leafs, so uint32_t suffices. */
+    uint32_t idx;
+    uint32_t tree_idx;
+
+    /* We need all three types of addresses in parallel. */
+    uint32_t ots_addr[8] = {0};
+    uint32_t ltree_addr[8] = {0};
+    uint32_t node_addr[8] = {0};
+
+    /* Select the required subtree. */
+    copy_subtree_addr(ots_addr, subtree_addr);
+    copy_subtree_addr(ltree_addr, subtree_addr);
+    copy_subtree_addr(node_addr, subtree_addr);
+
+    set_type(ots_addr, XMSS_ADDR_TYPE_OTS);
+    set_type(ltree_addr, XMSS_ADDR_TYPE_LTREE);
+    set_type(node_addr, XMSS_ADDR_TYPE_HASHTREE);
+
+    for (idx = 0; idx < (uint32_t)(1 << params->tree_height); idx++) {
+        /* Add the next leaf node to the stack. */
+        set_ltree_addr(ltree_addr, idx);
+        set_ots_addr(ots_addr, idx);
+        gen_leaf_wots(params, stack + offset*params->n,
+                      sk_seed, pub_seed, ltree_addr, ots_addr);
+        offset++;
+        heights[offset - 1] = 0;
+
+        /* If this is a node we need for the auth path.. */
+        if ((leaf_idx ^ 0x1) == idx) {
+            memcpy(auth_path, stack + (offset - 1)*params->n, params->n);
+        }
+
+        /* While the top-most nodes are of equal height.. */
+        while (offset >= 2 && heights[offset - 1] == heights[offset - 2]) {
+            /* Compute index of the new node, in the next layer. */
+            tree_idx = (idx >> (heights[offset - 1] + 1));
+
+            /* Hash the top-most nodes from the stack together. */
+            /* Note that tree height is the 'lower' layer, even though we use
+               the index of the new node on the 'higher' layer. This follows
+               from the fact that we address the hash function calls. */
+            set_tree_height(node_addr, heights[offset - 1]);
+            set_tree_index(node_addr, tree_idx);
+            thash_h(params, stack + (offset-2)*params->n,
+                           stack + (offset-2)*params->n, pub_seed, node_addr);
+            offset--;
+            /* Note that the top-most node is now one layer higher. */
+            heights[offset - 1]++;
+
+            /* If this is a node we need for the auth path.. */
+            if (((leaf_idx >> heights[offset - 1]) ^ 0x1) == tree_idx) {
+                memcpy(auth_path + heights[offset - 1]*params->n,
+                       stack + (offset - 1)*params->n, params->n);
+            }
+        }
+    }
+    memcpy(root, stack, params->n);
+}
 /*
  * Generates a XMSS key pair for a given parameter set.
  * Format sk: [(32bit) index || SK_SEED || SK_PRF || root || PUB_SEED]
@@ -78,9 +145,17 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
                          + params->full_height * params->n);
 */
 //[index || first_tree_path || 2th_tree_sign || 2th_tree_path || ...... || first_tree_sign_full_Matrix]
-    unsigned char helper_cache[params.index_bytes 
+//    unsigned char helper_cache[params.index_bytes 
+//                         + (params.d - 1) * params.wots_sig_bytes
+//                         + params.full_height * params.n + params.wots_w * params.wots_sig_bytes];
+    unsigned char *helper_cache = malloc(params.index_bytes 
                          + (params.d - 1) * params.wots_sig_bytes
-                         + params.full_height * params.n + params.wots_w * params.wots_sig_bytes];
+                         + params.full_height * params.n + params.wots_w * params.wots_sig_bytes);
+    if (!helper_cache) {
+        perror("sig allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
     unsigned char helper_buff[params.index_bytes 
                          + (params.d - 1) * params.wots_sig_bytes
                          + params.full_height * params.n + params.wots_w * params.wots_sig_bytes];
@@ -189,17 +264,17 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
             /* Initially, root = mhash, but on subsequent iterations it is the root
             of the subtree below the currently processed subtree. */
             if(i==0){
-                wots_sign_all(&params, helper_buff + params.index_bytes, sk_seed, pub_seed, ots_addr);
+                wots_sign_all(&params, &helper_buff + params.index_bytes, sk_seed, pub_seed, ots_addr);
 //                helper_cache += params-> *params->wots_sig_bytes;
             }
             else{
-                wots_sign(&params, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
+                wots_sign(&params, &helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
                  + params.tree_height*params.n*i + params.wots_sig_bytes*(i-1) , root, sk_seed, pub_seed, ots_addr);
 //                helper_cache += params-> *params->wots_sig_bytes;
             }
 
             /* Compute the authentication path for the used WOTS leaf. */
-            treehash(&params, root, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
+            treehash(&params, root, &helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
              + params.tree_height*params.n*i + params.wots_sig_bytes*i , sk_seed, pub_seed, idx_leaf, ots_addr);
 //            sm += params->tree_height*params->n;
 
@@ -223,10 +298,10 @@ void wots_sign_all(const xmss_params *params,
                unsigned char *sig, const unsigned char *seed, const unsigned char *pub_seed,
                uint32_t addr[8])
 {
-    int lengths[params->wots_len];
+    int lengths[params->wots_len * params->n];
     uint32_t i;
     uint32_t j;
-    unsigned char exp_seed[params->wots_len];
+    unsigned char exp_seed[params->wots_len * params->n];
 
 
     /* The WOTS+ private key is derived from the seed. */

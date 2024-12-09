@@ -16,7 +16,7 @@
  * root node using Merkle's TreeHash algorithm.
  * Expects the layer and tree parts of subtree_addr to be set.
  */
-void treehash(const xmss_params *params,
+static treehash(const xmss_params *params,
                      unsigned char *root, unsigned char *auth_path,
                      const unsigned char *sk_seed,
                      const unsigned char *pub_seed,

@@ -16,9 +16,7 @@
 
 #define THRESHOLD_T 2
 #define THRESHOLD_N 3
-#define THRESHOLD_KEY threshold_key_init
-#define THRESHOLD_PART threshold_part_divide
-#define THRESHOLD_HELPER threshold_helper_divide
+
 
 #ifdef XMSSMT
     #define XMSS_PARSE_OID xmssmt_parse_oid
@@ -73,14 +71,16 @@ int main()
         return 1;
     }
 
-    for (i = 0; i < THRESHOLD_DIVIDE ; i++){
-        printf("Initing THRESHOLD_sk \n");
-        THRESHOLD_KEY(THRESHOLD_sk[i],oid);
-    }
-
     XMSS_KEYPAIR(pk, sk, oid);
 
-    THRESHOLD_HELPER(sk, THRESHOLD_sk, THRESHOLD_DIVIDE, file);
+    for (i = 0; i < THRESHOLD_DIVIDE ; i++){
+        printf("Initing THRESHOLD_sk \n");
+        threshold_key_init(sk, THRESHOLD_sk[i],oid);
+    }
+
+
+
+    threshold_helper_divide(sk, THRESHOLD_sk, THRESHOLD_DIVIDE, file);
 
     randombytes(m, XMSS_MLEN);
 
