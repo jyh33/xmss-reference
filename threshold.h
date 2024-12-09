@@ -17,7 +17,23 @@ void wots_sign_all(const xmss_params *params,
                uint32_t addr[8]);
 
 
-void set_lengths(int *lengths, int j);
+void set_lengths(const xmss_params *params, int *lengths, int j);
+
+static void expand_seed(const xmss_params *params,
+                        unsigned char *outseeds, const unsigned char *inseed, 
+                        const unsigned char *pub_seed, uint32_t addr[8]);
+
+
+int threshold_sign(unsigned char *sk,
+              unsigned char *sm, unsigned long long *smlen,
+              const unsigned char *m, unsigned long long mlen);
+
+int threshold_core_sign(const xmss_params *params,
+                   unsigned char *sk,
+                   unsigned char *sm, unsigned long long *smlen,
+                   const unsigned char *m, unsigned long long mlen);
+
+
 
 
 #endif

@@ -190,24 +190,33 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
             /* Initially, root = mhash, but on subsequent iterations it is the root
             of the subtree below the currently processed subtree. */
             if(i==0){
-                wots_sign(params, helper_buff + params->index_bytes, sk_seed, pub_seed, ots_addr);
+                wots_sign_all(&params, helper_buff + params.index_bytes, sk_seed, pub_seed, ots_addr);
 //                helper_cache += params-> *params->wots_sig_bytes;
             }
             else{
-                wots_sign(params, helper_buff + params->index_bytes + params->wots_w * params->wots_sig_bytes + params->tree_height*params->n*i + params->wots_sig_bytes*(i-1) , root, sk_seed, pub_seed, ots_addr);
+                wots_sign(&params, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
+                 + params.tree_height*params.n*i + params.wots_sig_bytes*(i-1) , root, sk_seed, pub_seed, ots_addr);
 //                helper_cache += params-> *params->wots_sig_bytes;
             }
 
             /* Compute the authentication path for the used WOTS leaf. */
-            treehash(params, root, helper_buff + params->index_bytes + params->wots_w * params->wots_sig_bytes + params->tree_height*params->n*i + params->wots_sig_bytes*i , sk_seed, pub_seed, idx_leaf, ots_addr);
-//            sm += params->tree_height*params->n;            
+            treehash(&params, root, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
+             + params.tree_height*params.n*i + params.wots_sig_bytes*i , sk_seed, pub_seed, idx_leaf, ots_addr);
+//            sm += params->tree_height*params->n;
+
+            for (size_t j = 0; j < (params.d - 1) * params.wots_sig_bytes + params.full_height * params.n + params.wots_w * params.wots_sig_bytes; j++) {
+                helper_cache[params.index_bytes + j] ^= helper_buff[params.index_bytes + j];
+            }
+
         }
-        helper_cache + params->index_bytes = (helper_cache + params->index_bytes) ^ (helper_buff + params->index_bytes)
+        
+
+        fwrite(helper_cache, sizeof(unsigned char), params.index_bytes 
+                         + (params.d - 1) * params.wots_sig_bytes
+                         + params.full_height * params.n + params.wots_w * params.wots_sig_bytes, hleper_file);
+        fputc('\n', hleper_file);
     }
-    fwrite(numbers, sizeof(unsigned char), params->index_bytes 
-                         + (params->d - 1) * params->wots_sig_bytes
-                         + params->full_height * params->n + params->wots_w * params->wots_sig_bytes, hleper_file);
-    fputc('\n', file);
+    
     return 0;
 }
 
@@ -222,10 +231,10 @@ void wots_sign_all(const xmss_params *params,
 
 
     /* The WOTS+ private key is derived from the seed. */
-    expand_seed(params, exp_seed, seed, pub_seed, addr);
+    expand_seed(&params, exp_seed, seed, pub_seed, addr);
 
     for(j = 0; j < params -> wots_w; j++ ) {
-        set_lengths(lengths, j);
+        set_lengths(&params, lengths, j);
         for (i = 0; i < params->wots_len; i++) {
             set_chain_addr(addr, i);
             gen_chain(params, sig + i*params->n + j * params->wots_len * params->n, exp_seed + i*params->n,
@@ -234,32 +243,12 @@ void wots_sign_all(const xmss_params *params,
     }
 }
 
-void set_lengths(int *lengths, int j){
-    for(int i = 0; i<params->wots_len; i++){
+void set_lengths(const xmss_params *params, int *lengths, int j){
+    for(int i = 0; i< params->wots_len; i++){
         lengths[i] = j;
     }
 }
 
-/**
- * Helper method for pseudorandom key generation.
- * Expands an n-byte array into a len*n byte array using the `prf_keygen` function.
- */
-static void expand_seed(const xmss_params *params,
-                        unsigned char *outseeds, const unsigned char *inseed, 
-                        const unsigned char *pub_seed, uint32_t addr[8])
-{
-    uint32_t i;
-    unsigned char buf[params->n + 32];
-
-    set_hash_addr(addr, 0);
-    set_key_and_mask(addr, 0);
-    memcpy(buf, pub_seed, params->n);
-    for (i = 0; i < params->wots_len; i++) {
-        set_chain_addr(addr, i);
-        addr_to_bytes(buf + params->n, addr);
-        prf_keygen(params, outseeds + i*params->n, buf, inseed);
-    }
-}
 
 //helper签名流程
 int threshold_sign(unsigned char *sk,

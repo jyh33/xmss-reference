@@ -34,4 +34,9 @@ void wots_pk_from_sig(const xmss_params *params, unsigned char *pk,
                       const unsigned char *sig, const unsigned char *msg,
                       const unsigned char *pub_seed, uint32_t addr[8]);
 
+static void gen_chain(const xmss_params *params,
+                      unsigned char *out, const unsigned char *in,
+                      unsigned int start, unsigned int steps,
+                      const unsigned char *pub_seed, uint32_t addr[8]);
+
 #endif
