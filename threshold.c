@@ -241,6 +241,7 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
             set_layer_addr(ots_addr, i);
             set_tree_addr(ots_addr, idx);
             set_ots_addr(ots_addr, idx_leaf);
+            printf(i);
 
             /* Compute a WOTS signature. */
             /* Initially, root = mhash, but on subsequent iterations it is the root
@@ -266,6 +267,7 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
             set_layer_addr(ots_addr, i);
             set_tree_addr(ots_addr, idx);
             set_ots_addr(ots_addr, idx_leaf);
+            printf(i);
 
             /* Compute a WOTS signature. */
             /* Initially, root = mhash, but on subsequent iterations it is the root
@@ -297,7 +299,8 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
                          + params.full_height * params.n + params.wots_w * params.wots_sig_bytes, hleper_file);
         fputc('\n', hleper_file);
     }
-    
+    free(helper_buff);
+    free(helper_cache);
     return 0;
 }
 
@@ -314,8 +317,9 @@ void wots_sign_all(const xmss_params *params,
         perror("sig allocation failed");
         exit(-2);
     }
+    printf("len: %zu\n", params->wots_len);
 
-    printf("len: %zu\n", params->n);
+//    printf("len: %zu\n", params->n);
 
     /* The WOTS+ private key is derived from the seed. */
     expand_seed(params, exp_seed, seed, pub_seed, addr);
@@ -326,8 +330,10 @@ void wots_sign_all(const xmss_params *params,
             set_chain_addr(addr, i);
             gen_chain(params, sig + i*params->n + j * params->wots_len * params->n, exp_seed + i*params->n,
                     0, lengths[i], pub_seed, addr);
+//            printf("%d %d \n", j, i);
         }
     }
+    free(exp_seed);
 }
 
 void set_lengths(const xmss_params *params, int *lengths, int j){
