@@ -18,6 +18,8 @@ void expand_seed(const xmss_params *params,
     uint32_t i;
     unsigned char buf[params->n + 32];
 
+    printf("memcpy src: %p, dest: %p, len: %zu\n", pub_seed, outseeds, params->n);
+
     set_hash_addr(addr, 0);
     set_key_and_mask(addr, 0);
     memcpy(buf, pub_seed, params->n);

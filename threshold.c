@@ -153,12 +153,19 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
                          + params.full_height * params.n + params.wots_w * params.wots_sig_bytes);
     if (!helper_cache) {
         perror("sig allocation failed");
-        exit(EXIT_FAILURE);
+        exit(-2);
     }
 
-    unsigned char helper_buff[params.index_bytes 
+    unsigned char *helper_buff = malloc(params.index_bytes 
                          + (params.d - 1) * params.wots_sig_bytes
-                         + params.full_height * params.n + params.wots_w * params.wots_sig_bytes];
+                         + params.full_height * params.n + params.wots_w * params.wots_sig_bytes);
+    if (!helper_buff) {
+        perror("sig allocation failed");
+        exit(-2);
+    }
+//    unsigned char helper_buff[params.index_bytes 
+//                         + (params.d - 1) * params.wots_sig_bytes
+//                         + params.full_height * params.n + params.wots_w * params.wots_sig_bytes];
     unsigned char root[params.n];
     unsigned char *mhash = root;
     unsigned long long idx;
@@ -264,17 +271,17 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
             /* Initially, root = mhash, but on subsequent iterations it is the root
             of the subtree below the currently processed subtree. */
             if(i==0){
-                wots_sign_all(&params, &helper_buff + params.index_bytes, sk_seed, pub_seed, ots_addr);
+                wots_sign_all(&params, helper_buff + params.index_bytes, sk_seed, pub_seed, ots_addr);
 //                helper_cache += params-> *params->wots_sig_bytes;
             }
             else{
-                wots_sign(&params, &helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
+                wots_sign(&params, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
                  + params.tree_height*params.n*i + params.wots_sig_bytes*(i-1) , root, sk_seed, pub_seed, ots_addr);
 //                helper_cache += params-> *params->wots_sig_bytes;
             }
 
             /* Compute the authentication path for the used WOTS leaf. */
-            treehash(&params, root, &helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
+            treehash(&params, root, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
              + params.tree_height*params.n*i + params.wots_sig_bytes*i , sk_seed, pub_seed, idx_leaf, ots_addr);
 //            sm += params->tree_height*params->n;
 
@@ -301,14 +308,20 @@ void wots_sign_all(const xmss_params *params,
     int lengths[params->wots_len * params->n];
     uint32_t i;
     uint32_t j;
-    unsigned char exp_seed[params->wots_len * params->n];
+//    unsigned char exp_seed[params->wots_len * params->n];
+    unsigned char *exp_seed = malloc(params->wots_len * params->n);
+    if (!exp_seed) {
+        perror("sig allocation failed");
+        exit(-2);
+    }
 
+    printf("len: %zu\n", params->n);
 
     /* The WOTS+ private key is derived from the seed. */
-    expand_seed(&params, exp_seed, seed, pub_seed, addr);
+    expand_seed(params, exp_seed, seed, pub_seed, addr);
 
     for(j = 0; j < params -> wots_w; j++ ) {
-        set_lengths(&params, lengths, j);
+        set_lengths(params, lengths, j);
         for (i = 0; i < params->wots_len; i++) {
             set_chain_addr(addr, i);
             gen_chain(params, sig + i*params->n + j * params->wots_len * params->n, exp_seed + i*params->n,
