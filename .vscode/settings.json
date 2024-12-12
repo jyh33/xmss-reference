@@ -1,6 +1,7 @@
 {
     "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
-        "threshold.h": "c"
+        "threshold.h": "c",
+        "*.tcc": "c"
     }
 }

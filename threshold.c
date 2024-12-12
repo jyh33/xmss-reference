@@ -81,6 +81,13 @@ static treehash(const xmss_params *params,
     }
     memcpy(root, stack, params->n);
 }
+
+void print_unsigned_char_array(const unsigned char *arr, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        printf("%02x ", arr[i]);
+    }
+    printf("\n");
+}
 /*
  * Generates a XMSS key pair for a given parameter set.
  * Format sk: [(32bit) index || SK_SEED || SK_PRF || root || PUB_SEED]
@@ -95,7 +102,7 @@ int threshold_key_init(unsigned char *sk,unsigned char *ts_sk, const uint32_t oi
     if (xmss_parse_oid(&params, oid)) {
         return -1;
     }
-    ts_sk = sk;
+    memcpy(ts_sk, sk, XMSS_OID_LEN + params.sk_bytes);
 
     ts_sk += XMSS_OID_LEN;
     ts_sk += params.index_bytes;
@@ -126,6 +133,8 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
     xmss_params params;
     uint32_t oid = 0;
     unsigned int i;
+    unsigned int j;
+    unsigned int z;
 
     for (i = 0; i < XMSS_OID_LEN; i++) {
         oid |= sk[XMSS_OID_LEN - i - 1] << (i * 8);
@@ -183,7 +192,7 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
 
 
 
-    for(bool sk_flag = true; sk_flag ; ){
+    for(bool sk_flag = true; sk_flag; ){
 
         /* Read and use the current index from the secret key. */
         idx = (unsigned long)bytes_to_ull(sk, params.index_bytes);
@@ -242,6 +251,8 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
             set_tree_addr(ots_addr, idx);
             set_ots_addr(ots_addr, idx_leaf);
             printf(i);
+            print_unsigned_char_array(sk , XMSS_OID_LEN + params.sk_bytes);
+            printf("%ld \n", sizeof(sk));
 
             /* Compute a WOTS signature. */
             /* Initially, root = mhash, but on subsequent iterations it is the root
@@ -259,36 +270,40 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
             treehash(&params, root, helper_cache + params.index_bytes + params.wots_w * params.wots_sig_bytes + params.tree_height*params.n*i + params.wots_sig_bytes*i , sk_seed, pub_seed, idx_leaf, ots_addr);
 //            sm += params->tree_height*params->n;            
         }
-        for (i=0; i < size; i++){
-            idx_leaf = (idx & ((1 << params.tree_height)-1));
-            idx = idx >> params.tree_height;
-            sk_seed = ts_sk[i] + params.index_bytes;
+        for (j=0; j < size; j++){
+            for (i = 0; i < params.d; i++) {
+                idx_leaf = (idx & ((1 << params.tree_height)-1));
+                idx = idx >> params.tree_height;
 
-            set_layer_addr(ots_addr, i);
-            set_tree_addr(ots_addr, idx);
-            set_ots_addr(ots_addr, idx_leaf);
-            printf(i);
+                set_layer_addr(ots_addr, i);
+                set_tree_addr(ots_addr, idx);
+                set_ots_addr(ots_addr, idx_leaf);
+                printf(i);
 
-            /* Compute a WOTS signature. */
-            /* Initially, root = mhash, but on subsequent iterations it is the root
-            of the subtree below the currently processed subtree. */
-            if(i==0){
-                wots_sign_all(&params, helper_buff + params.index_bytes, sk_seed, pub_seed, ots_addr);
-//                helper_cache += params-> *params->wots_sig_bytes;
-            }
-            else{
-                wots_sign(&params, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
-                 + params.tree_height*params.n*i + params.wots_sig_bytes*(i-1) , root, sk_seed, pub_seed, ots_addr);
-//                helper_cache += params-> *params->wots_sig_bytes;
-            }
+                /* Compute a WOTS signature. */
+                /* Initially, root = mhash, but on subsequent iterations it is the root
+                of the subtree below the currently processed subtree. */
+                if(i==0){
+                    print_unsigned_char_array(ts_sk[j] , XMSS_OID_LEN + params.sk_bytes);
+                    printf("%ld \n", sizeof(ts_sk[j]));
+                    wots_sign_all(&params, helper_buff + params.index_bytes, ts_sk[j] + params.index_bytes, pub_seed, ots_addr);
+    //                helper_cache += params-> *params->wots_sig_bytes;
+                }
+                else{
+                    wots_sign(&params, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
+                    + params.tree_height*params.n*i + params.wots_sig_bytes*(i-1) , root, ts_sk[j] + params.index_bytes, pub_seed, ots_addr);
+    //                helper_cache += params-> *params->wots_sig_bytes;
+                }
 
-            /* Compute the authentication path for the used WOTS leaf. */
-            treehash(&params, root, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
-             + params.tree_height*params.n*i + params.wots_sig_bytes*i , sk_seed, pub_seed, idx_leaf, ots_addr);
-//            sm += params->tree_height*params->n;
+                /* Compute the authentication path for the used WOTS leaf. */
+                treehash(&params, root, helper_buff + params.index_bytes + params.wots_w * params.wots_sig_bytes
+                + params.tree_height*params.n*i + params.wots_sig_bytes*i , ts_sk[j] + params.index_bytes, pub_seed, idx_leaf, ots_addr);
+    //            sm += params->tree_height*params->n;
+            
 
-            for (size_t j = 0; j < (params.d - 1) * params.wots_sig_bytes + params.full_height * params.n + params.wots_w * params.wots_sig_bytes; j++) {
-                helper_cache[params.index_bytes + j] ^= helper_buff[params.index_bytes + j];
+                for (z = 0; z < (params.d - 1) * params.wots_sig_bytes + params.full_height * params.n + params.wots_w * params.wots_sig_bytes; z++) {
+                    helper_cache[params.index_bytes + z] ^= helper_buff[params.index_bytes + z];
+                }
             }
 
         }

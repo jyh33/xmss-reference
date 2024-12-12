@@ -34,13 +34,14 @@
     #define XMSS_SIGN_OPEN xmss_sign_open
     #define XMSS_VARIANT "XMSS-SHA2_10_256"
 #endif
-
+/*
 void print_unsigned_char_array(const unsigned char *arr, size_t size) {
     for (size_t i = 0; i < size; i++) {
         printf("%02x ", arr[i]);
     }
     printf("\n");
 }
+*/
 
 int main()
 {
@@ -85,10 +86,6 @@ int main()
         printf("Initing THRESHOLD_sk \n");
         threshold_key_init(sk, THRESHOLD_sk[i],oid);
     }
-    print_unsigned_char_array(sk , XMSS_OID_LEN + params.sk_bytes);
-    printf("%d \n", sizeof(sk));
-    print_unsigned_char_array(THRESHOLD_sk[0] , XMSS_OID_LEN + params.sk_bytes);
-    printf("%d \n", sizeof(THRESHOLD_sk[0]));
     threshold_helper_divide(sk, THRESHOLD_sk, THRESHOLD_DIVIDE, file);
 }
 
