@@ -300,19 +300,19 @@ int threshold_helper_divide(unsigned char *sk,unsigned char **ts_sk,
                 + params.tree_height*params.n*i + params.wots_sig_bytes*i , ts_sk[j] + params.index_bytes, pub_seed, idx_leaf, ots_addr);
     //            sm += params->tree_height*params->n;
             
-
-                for (z = 0; z < (params.d - 1) * params.wots_sig_bytes + params.full_height * params.n + params.wots_w * params.wots_sig_bytes; z++) {
-                    helper_cache[params.index_bytes + z] ^= helper_buff[params.index_bytes + z];
-                }
             }
 
-        }
-        
+            for (z = 0; z < (params.d - 1) * params.wots_sig_bytes + params.full_height * params.n + params.wots_w * params.wots_sig_bytes; z++) {
+                    helper_cache[params.index_bytes + z] ^= helper_buff[params.index_bytes + z];
+            }
+            
+        }        
 
         fwrite(helper_cache, sizeof(unsigned char), params.index_bytes 
                          + (params.d - 1) * params.wots_sig_bytes
                          + params.full_height * params.n + params.wots_w * params.wots_sig_bytes, hleper_file);
-        fputc('\n', hleper_file);
+        fputc("\n", hleper_file);
+        printf("%ld \n", idx);
         fflush(hleper_file);
     }
     free(helper_buff);
@@ -333,7 +333,7 @@ void wots_sign_all(const xmss_params *params,
         perror("sig allocation failed");
         exit(-2);
     }
-    printf("len: %zu\n", params->wots_len);
+//    printf("len: %zu\n", params->wots_len);
 
 //    printf("len: %zu\n", params->n);
 

@@ -16,8 +16,6 @@
 
 #define THRESHOLD_T 2
 #define THRESHOLD_N 3
-#define THRESHOLD_KEY threshold_key_init
-#define THRESHOLD_PART threshold_part
 
 #ifdef XMSSMT
     #define XMSS_PARSE_OID xmssmt_parse_oid
@@ -79,7 +77,7 @@ int main()
  * Format sk: [(32bit) index || SK_SEED || SK_PRF || root || PUB_SEED]
  * Format pk: [root || PUB_SEED], omitting algorithm OID.
  */
-    FILE *file = fopen("example.txt", "w");
+    FILE *file = fopen("helper.save", "w");
     if (file == NULL) {
         perror("Error opening file");
         return 1;
