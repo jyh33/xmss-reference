@@ -127,7 +127,7 @@ void threshold_part_divide(unsigned char *ts_in_sk, unsigned char *ts_out_sk,
 }
 
 //门限参与方签名份额生成，helper的份额产生并按行存入wots_file与path_file当中
-int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk, 
+int threshold_helper_divide(unsigned char *sk,unsigned char **ts_sk, 
                         int size, FILE *hleper_file)
 {
     xmss_params params;
@@ -250,9 +250,9 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
             set_layer_addr(ots_addr, i);
             set_tree_addr(ots_addr, idx);
             set_ots_addr(ots_addr, idx_leaf);
-            printf(i);
-            print_unsigned_char_array(sk , XMSS_OID_LEN + params.sk_bytes);
-            printf("%ld \n", sizeof(sk));
+//            printf(i);
+//            print_unsigned_char_array(sk , XMSS_OID_LEN + params.sk_bytes);
+//            printf("%ld \n", sizeof(sk));
 
             /* Compute a WOTS signature. */
             /* Initially, root = mhash, but on subsequent iterations it is the root
@@ -278,14 +278,14 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
                 set_layer_addr(ots_addr, i);
                 set_tree_addr(ots_addr, idx);
                 set_ots_addr(ots_addr, idx_leaf);
-                printf(i);
+//                printf(i);
 
                 /* Compute a WOTS signature. */
                 /* Initially, root = mhash, but on subsequent iterations it is the root
                 of the subtree below the currently processed subtree. */
                 if(i==0){
-                    print_unsigned_char_array(ts_sk[j] , XMSS_OID_LEN + params.sk_bytes);
-                    printf("%ld \n", sizeof(ts_sk[j]));
+//                    print_unsigned_char_array(ts_sk[j] , XMSS_OID_LEN + params.sk_bytes);
+//                    printf("%ld \n", sizeof(ts_sk[j]));
                     wots_sign_all(&params, helper_buff + params.index_bytes, ts_sk[j] + params.index_bytes, pub_seed, ots_addr);
     //                helper_cache += params-> *params->wots_sig_bytes;
                 }
@@ -313,6 +313,7 @@ int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk,
                          + (params.d - 1) * params.wots_sig_bytes
                          + params.full_height * params.n + params.wots_w * params.wots_sig_bytes, hleper_file);
         fputc('\n', hleper_file);
+        fflush(hleper_file);
     }
     free(helper_buff);
     free(helper_cache);

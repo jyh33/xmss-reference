@@ -8,7 +8,7 @@ int threshold_key_init(unsigned char *sk,unsigned char *ts_sk, const uint32_t oi
 void threshold_part_divide(unsigned char *ts_in_sk, unsigned char *ts_out_sk, 
                         int size, int each_seed);
 
-int threshold_helper_divide(unsigned char *sk, unsigned char (*tk_sk)[XMSS_OID_LEN + params.sk_bytes], 
+int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk, 
                         int size, FILE *hleper_file);
 
 

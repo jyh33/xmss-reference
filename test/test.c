@@ -67,14 +67,19 @@ int main()
     unsigned long long smlen;
     unsigned long long mlen;
 
-    unsigned char THRESHOLD_sk[THRESHOLD_DIVIDE][XMSS_OID_LEN + params.sk_bytes];
+//    unsigned char THRESHOLD_sk[THRESHOLD_DIVIDE][XMSS_OID_LEN + params.sk_bytes];
+    unsigned char **THRESHOLD_sk = malloc(THRESHOLD_DIVIDE * sizeof(unsigned char *));
+    for (size_t i = 0; i < THRESHOLD_DIVIDE; i++) {
+        THRESHOLD_sk[i] = malloc((XMSS_OID_LEN + params.sk_bytes) * sizeof(unsigned char));
+    }
+
 
 /*
  * Generates a XMSS key pair for a given parameter set.
  * Format sk: [(32bit) index || SK_SEED || SK_PRF || root || PUB_SEED]
  * Format pk: [root || PUB_SEED], omitting algorithm OID.
  */
-    FILE *file = fopen("example.txt", "rw");
+    FILE *file = fopen("example.txt", "w");
     if (file == NULL) {
         perror("Error opening file");
         return 1;
@@ -87,5 +92,12 @@ int main()
         threshold_key_init(sk, THRESHOLD_sk[i],oid);
     }
     threshold_helper_divide(sk, THRESHOLD_sk, THRESHOLD_DIVIDE, file);
+
+
+    for (size_t i = 0; i < THRESHOLD_DIVIDE; i++) {
+        free(THRESHOLD_sk[i]);
+    }
+    free(THRESHOLD_sk);
+
 }
 
