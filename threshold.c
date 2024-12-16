@@ -196,6 +196,7 @@ int threshold_helper_divide(unsigned char *sk,unsigned char **ts_sk,
 
         /* Read and use the current index from the secret key. */
         idx = (unsigned long)bytes_to_ull(sk, params.index_bytes);
+        printf("%ld \n", idx);
         
         /* Check if we can still sign with this sk.
         * If not, return -2
@@ -305,14 +306,13 @@ int threshold_helper_divide(unsigned char *sk,unsigned char **ts_sk,
             for (z = 0; z < (params.d - 1) * params.wots_sig_bytes + params.full_height * params.n + params.wots_w * params.wots_sig_bytes; z++) {
                     helper_cache[params.index_bytes + z] ^= helper_buff[params.index_bytes + z];
             }
-            
+
         }        
 
         fwrite(helper_cache, sizeof(unsigned char), params.index_bytes 
                          + (params.d - 1) * params.wots_sig_bytes
                          + params.full_height * params.n + params.wots_w * params.wots_sig_bytes, hleper_file);
-        fputc("\n", hleper_file);
-        printf("%ld \n", idx);
+//        fputc("\n", hleper_file);
         fflush(hleper_file);
     }
     free(helper_buff);

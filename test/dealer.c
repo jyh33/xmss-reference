@@ -17,7 +17,6 @@
 #define THRESHOLD_T 2
 #define THRESHOLD_N 3
 
-
 #ifdef XMSSMT
     #define XMSS_PARSE_OID xmssmt_parse_oid
     #define XMSS_STR_TO_OID xmssmt_str_to_oid
@@ -68,7 +67,7 @@ int main()
  * Format sk: [(32bit) index || SK_SEED || SK_PRF || root || PUB_SEED]
  * Format pk: [root || PUB_SEED], omitting algorithm OID.
  */
-    FILE *file = fopen("example.txt", "rw");
+    FILE *file = fopen("helper.save", "wb");
     if (file == NULL) {
         perror("Error opening file");
         return 1;
@@ -81,9 +80,6 @@ int main()
         threshold_key_init(sk, THRESHOLD_sk[i],oid);
     }
     threshold_helper_divide(sk, THRESHOLD_sk, THRESHOLD_DIVIDE, file);
-
-
-
 
     randombytes(m, XMSS_MLEN);
 
@@ -164,7 +160,7 @@ int main()
     free(m);
     free(sm);
     free(mout);
-    
+
     for (size_t i = 0; i < THRESHOLD_DIVIDE; i++) {
         free(THRESHOLD_sk[i]);
     }

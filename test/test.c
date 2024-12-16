@@ -77,7 +77,7 @@ int main()
  * Format sk: [(32bit) index || SK_SEED || SK_PRF || root || PUB_SEED]
  * Format pk: [root || PUB_SEED], omitting algorithm OID.
  */
-    FILE *file = fopen("helper.save", "w");
+    FILE *file = fopen("helper.save", "wb");
     if (file == NULL) {
         perror("Error opening file");
         return 1;
