@@ -128,7 +128,7 @@ void threshold_part_divide(unsigned char *ts_in_sk, unsigned char *ts_out_sk,
 
 //门限参与方签名份额生成，helper的份额产生并按行存入wots_file与path_file当中
 int threshold_helper_divide(unsigned char *sk,unsigned char **ts_sk, 
-                        int size, FILE *hleper_file)
+                        int size, unsigned char *helper_sk, FILE *hleper_file)
 {
     xmss_params params;
     uint32_t oid = 0;
@@ -141,6 +141,10 @@ int threshold_helper_divide(unsigned char *sk,unsigned char **ts_sk,
     }
     if (xmss_parse_oid(&params, oid)) {
         return -1;
+    }
+
+    for (i = 0; i < XMSS_OID_LEN; i++) {
+        helper_sk[i]= sk[i];
     }
 
     const unsigned char *sk_seed = sk + params.index_bytes;

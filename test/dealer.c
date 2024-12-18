@@ -31,7 +31,7 @@
     #define XMSS_SIGN xmss_sign
     #define XMSS_SIGN_OPEN xmss_sign_open
     #define XMSS_VARIANT "XMSS-SHA2_10_256"
-#endif
+#endif 
 
 int main()
 {
@@ -54,20 +54,29 @@ int main()
     unsigned char *m = malloc(XMSS_MLEN);
     unsigned char *sm = malloc(params.sig_bytes + XMSS_MLEN);
     unsigned char *mout = malloc(params.sig_bytes + XMSS_MLEN);
+    unsigned char *helper_sk = malloc(XMSS_OID_LEN + params.index_bytes)
     unsigned long long smlen;
+    unsigned long long ts_smlen;
     unsigned long long mlen;
 
     //    unsigned char THRESHOLD_sk[THRESHOLD_DIVIDE][XMSS_OID_LEN + params.sk_bytes];
     unsigned char **THRESHOLD_sk = malloc(THRESHOLD_DIVIDE * sizeof(unsigned char *));
-    for (size_t i = 0; i < THRESHOLD_DIVIDE; i++) {
+    for (i = 0; i < THRESHOLD_DIVIDE; i++) {
         THRESHOLD_sk[i] = malloc((XMSS_OID_LEN + params.sk_bytes) * sizeof(unsigned char));
     }
+
+    unsigned char **THRESHOLD_sm = malloc(THRESHOLD_DIVIDE * sizeof(unsigned char *));
+    for (i = 0; i < THRESHOLD_DIVIDE; i++) {
+        THRESHOLD_sm[i] = malloc((params.sig_bytes + XMSS_MLEN) * sizeof(unsigned char));
+    }
+
 /*
  * Generates a XMSS key pair for a given parameter set.
  * Format sk: [(32bit) index || SK_SEED || SK_PRF || root || PUB_SEED]
  * Format pk: [root || PUB_SEED], omitting algorithm OID.
  */
-    FILE *file = fopen("helper.save", "wb");
+
+    FILE *file = fopen("helper.save", "w+b");
     if (file == NULL) {
         perror("Error opening file");
         return 1;
@@ -80,6 +89,7 @@ int main()
         threshold_key_init(sk, THRESHOLD_sk[i],oid);
     }
     threshold_helper_divide(sk, THRESHOLD_sk, THRESHOLD_DIVIDE, file);
+
 
     randombytes(m, XMSS_MLEN);
 
@@ -165,6 +175,7 @@ int main()
         free(THRESHOLD_sk[i]);
     }
     free(THRESHOLD_sk);
+    fclose(file);
 
     return ret;
 }
