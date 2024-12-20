@@ -143,7 +143,7 @@ int threshold_helper_divide(unsigned char *sk,unsigned char **ts_sk,
         return -1;
     }
 
-    for (i = 0; i < XMSS_OID_LEN; i++) {
+    for (i = 0; i < XMSS_OID_LEN + params.index_bytes; i++) {
         helper_sk[i]= sk[i];
     }
 
@@ -364,7 +364,7 @@ void set_lengths(const xmss_params *params, int *lengths, int j){
 
 
 //helper签名流程
-int threshold_sign(unsigned char *sk,
+int threshold_sign(unsigned char **ts_sm, FILE *hleper_file
               unsigned char *sm, unsigned long long *smlen,
               const unsigned char *m, unsigned long long mlen)
 {

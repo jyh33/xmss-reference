@@ -56,7 +56,7 @@ int main()
     unsigned char *mout = malloc(params.sig_bytes + XMSS_MLEN);
     unsigned char *helper_sk = malloc(XMSS_OID_LEN + params.index_bytes)
     unsigned long long smlen;
-    unsigned long long ts_smlen;
+    unsigned long long ts_smlen[THRESHOLD_DIVIDE];
     unsigned long long mlen;
 
     //    unsigned char THRESHOLD_sk[THRESHOLD_DIVIDE][XMSS_OID_LEN + params.sk_bytes];
@@ -88,8 +88,7 @@ int main()
         printf("Initing THRESHOLD_sk \n");
         threshold_key_init(sk, THRESHOLD_sk[i],oid);
     }
-    threshold_helper_divide(sk, THRESHOLD_sk, THRESHOLD_DIVIDE, file);
-
+    threshold_helper_divide(sk, THRESHOLD_sk, THRESHOLD_DIVIDE, helper_sk, file);
 
     randombytes(m, XMSS_MLEN);
 
@@ -99,6 +98,16 @@ int main()
         printf("  - iteration #%d:\n", i);
 
         XMSS_SIGN(sk, sm, &smlen, m, XMSS_MLEN);
+
+        for (i = 0; i < THRESHOLD_DIVIDE ; i++){
+            printf("THRESHOLD part %d signing \n", i);
+            xmss_sign(THRESHOLD_sk[i], THRESHOLD_sm[i], &ts_smlen[i], m, XMSS_MLEN);
+        }
+
+        threshold_sign(THRESHOLD_sm, )
+
+        printf("THRESHOLD helper signing \n");
+        threshold_sign()
 
         if (smlen != params.sig_bytes + XMSS_MLEN) {
             printf("  X smlen incorrect [%llu != %u]!\n",

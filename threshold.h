@@ -9,7 +9,7 @@ void threshold_part_divide(unsigned char *ts_in_sk, unsigned char *ts_out_sk,
                         int size, int each_seed);
 
 int threshold_helper_divide(unsigned char *sk, unsigned char **ts_sk, 
-                        int size, FILE *hleper_file);
+                        int size, unsigned char *helper_sk, FILE *hleper_file);
 
 
 void wots_sign_all(const xmss_params *params,
@@ -26,7 +26,7 @@ static treehash(const xmss_params *params,
                      uint32_t leaf_idx, const uint32_t subtree_addr[8]);
 
 
-int threshold_sign(unsigned char *sk,
+int threshold_sign(unsigned char **ts_sm, FILE *hleper_file
               unsigned char *sm, unsigned long long *smlen,
               const unsigned char *m, unsigned long long mlen);
 
@@ -34,6 +34,11 @@ int threshold_core_sign(const xmss_params *params,
                    unsigned char *sk,
                    unsigned char *sm, unsigned long long *smlen,
                    const unsigned char *m, unsigned long long mlen);
+
+int thresholdmt_core_sign(const xmss_params *params,
+                     unsigned char *sk,
+                     unsigned char *sm, unsigned long long *smlen,
+                     const unsigned char *m, unsigned long long mlen);
 
 
 
