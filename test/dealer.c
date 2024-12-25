@@ -104,7 +104,7 @@ int main()
             xmss_sign(THRESHOLD_sk[i], THRESHOLD_sm[i], &ts_smlen[i], m, XMSS_MLEN);
         }
 
-        threshold_sign(THRESHOLD_sm, )
+        threshold_sign(THRESHOLD_sm, file);
 
         printf("THRESHOLD helper signing \n");
         threshold_sign()

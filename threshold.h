@@ -26,17 +26,17 @@ static treehash(const xmss_params *params,
                      uint32_t leaf_idx, const uint32_t subtree_addr[8]);
 
 
-int threshold_sign(unsigned char **ts_sm, FILE *hleper_file
+int threshold_sign(unsigned char **ts_sm, FILE *hleper_file, 
               unsigned char *sm, unsigned long long *smlen,
               const unsigned char *m, unsigned long long mlen);
 
 int threshold_core_sign(const xmss_params *params,
-                   unsigned char *sk,
+                   unsigned char **ts_sm, FILE *hleper_file, 
                    unsigned char *sm, unsigned long long *smlen,
                    const unsigned char *m, unsigned long long mlen);
 
 int thresholdmt_core_sign(const xmss_params *params,
-                     unsigned char *sk,
+                   unsigned char **ts_sm, FILE *hleper_file, 
                      unsigned char *sm, unsigned long long *smlen,
                      const unsigned char *m, unsigned long long mlen);
 

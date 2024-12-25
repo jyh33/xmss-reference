@@ -364,7 +364,7 @@ void set_lengths(const xmss_params *params, int *lengths, int j){
 
 
 //helper签名流程
-int threshold_sign(unsigned char **ts_sm, FILE *hleper_file
+int threshold_sign(unsigned char **ts_sm, FILE *hleper_file, 
               unsigned char *sm, unsigned long long *smlen,
               const unsigned char *m, unsigned long long mlen)
 {
@@ -378,14 +378,14 @@ int threshold_sign(unsigned char **ts_sm, FILE *hleper_file
     if (xmss_parse_oid(&params, oid)) {
         return -1;
     }
-    return threshold_core_sign(&params, sk + XMSS_OID_LEN, sm, smlen, m, mlen);
+    return threshold_core_sign(&params, ts_sm, hleper_file, sm, smlen, m, mlen);
 }
 /**
  * Signs a message. Returns an array containing the signature followed by the
  * message and an updated secret key.
  */
 int threshold_core_sign(const xmss_params *params,
-                   unsigned char *sk,
+                   unsigned char **ts_sm, FILE *hleper_file, 
                    unsigned char *sm, unsigned long long *smlen,
                    const unsigned char *m, unsigned long long mlen)
 {
@@ -393,7 +393,7 @@ int threshold_core_sign(const xmss_params *params,
        For d=1, as is the case with XMSS, some of the calls in the XMSSMT
        routine become vacuous (i.e. the loop only iterates once, and address
        management can be simplified a bit).*/
-    return thresholdmt_core_sign(params, sk, sm, smlen, m, mlen);
+    return thresholdmt_core_sign(params, ts_sm, hleper_file, sm, smlen, m, mlen);
 }
 
 /**
@@ -401,7 +401,7 @@ int threshold_core_sign(const xmss_params *params,
  * message and an updated secret key.
  */
 int thresholdmt_core_sign(const xmss_params *params,
-                     unsigned char *sk,
+                     unsigned char **ts_sm, FILE *hleper_file, 
                      unsigned char *sm, unsigned long long *smlen,
                      const unsigned char *m, unsigned long long mlen)
 {
