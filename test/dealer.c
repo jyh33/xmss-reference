@@ -51,12 +51,15 @@ int main()
 
     unsigned char pk[XMSS_OID_LEN + params.pk_bytes];
     unsigned char sk[XMSS_OID_LEN + params.sk_bytes];
+    unsigned char helper_sk[XMSS_OID_LEN + params.sk_bytes];
     unsigned char *m = malloc(XMSS_MLEN);
     unsigned char *sm = malloc(params.sig_bytes + XMSS_MLEN);
+    unsigned char *ts_sm = malloc(params.sig_bytes + XMSS_MLEN);
     unsigned char *mout = malloc(params.sig_bytes + XMSS_MLEN);
     unsigned char *helper_sk = malloc(XMSS_OID_LEN + params.index_bytes)
     unsigned long long smlen;
-    unsigned long long ts_smlen[THRESHOLD_DIVIDE];
+    unsigned long long ts_smlen;
+    unsigned long long ts_part_smlen[THRESHOLD_DIVIDE];
     unsigned long long mlen;
 
     //    unsigned char THRESHOLD_sk[THRESHOLD_DIVIDE][XMSS_OID_LEN + params.sk_bytes];
@@ -84,6 +87,16 @@ int main()
 
     XMSS_KEYPAIR(pk, sk, oid);
 
+    memcpy(helper_sk, sk, XMSS_OID_LEN + params.sk_bytes);
+
+    unsigned char padding[3 * params.n];
+
+    randombytes(padding, 3 * params.n);
+
+    memcpy(helper_sk + XMSS_OID_LEN + params.index_bytes, padding, 2 * params.n);
+
+    memcpy(helper_sk + XMSS_OID_LEN + params.index_bytes + 3 * params.n, padding + 2 * params.n,  params.n);
+
     for (i = 0; i < THRESHOLD_DIVIDE ; i++){
         printf("Initing THRESHOLD_sk \n");
         threshold_key_init(sk, THRESHOLD_sk[i],oid);
@@ -101,13 +114,12 @@ int main()
 
         for (i = 0; i < THRESHOLD_DIVIDE ; i++){
             printf("THRESHOLD part %d signing \n", i);
-            xmss_sign(THRESHOLD_sk[i], THRESHOLD_sm[i], &ts_smlen[i], m, XMSS_MLEN);
+            xmss_sign(THRESHOLD_sk[i], THRESHOLD_sm[i], &ts_part_smlen[i], m, XMSS_MLEN);
         }
 
-        threshold_sign(THRESHOLD_sm, file);
-
         printf("THRESHOLD helper signing \n");
-        threshold_sign()
+
+        threshold_sign(helper_sk, THRESHOLD_sm, file, ts_sm, ts_smlen, m, mlen);
 
         if (smlen != params.sig_bytes + XMSS_MLEN) {
             printf("  X smlen incorrect [%llu != %u]!\n",
