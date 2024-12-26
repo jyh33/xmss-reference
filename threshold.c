@@ -364,7 +364,8 @@ void set_lengths(const xmss_params *params, int *lengths, int j){
 
 
 //helper签名流程
-int threshold_sign(unsigned char **ts_sm, FILE *hleper_file, 
+int threshold_sign(unsigned char *sk,
+              unsigned char **ts_sm, FILE *hleper_file, 
               unsigned char *sm, unsigned long long *smlen,
               const unsigned char *m, unsigned long long mlen)
 {
@@ -378,13 +379,13 @@ int threshold_sign(unsigned char **ts_sm, FILE *hleper_file,
     if (xmss_parse_oid(&params, oid)) {
         return -1;
     }
-    return threshold_core_sign(&params, ts_sm, hleper_file, sm, smlen, m, mlen);
+    return threshold_core_sign(&params, sk, ts_sm, hleper_file, sm, smlen, m, mlen);
 }
 /**
  * Signs a message. Returns an array containing the signature followed by the
  * message and an updated secret key.
  */
-int threshold_core_sign(const xmss_params *params,
+int threshold_core_sign(const xmss_params *params, unsigned char *sk,
                    unsigned char **ts_sm, FILE *hleper_file, 
                    unsigned char *sm, unsigned long long *smlen,
                    const unsigned char *m, unsigned long long mlen)
@@ -393,19 +394,19 @@ int threshold_core_sign(const xmss_params *params,
        For d=1, as is the case with XMSS, some of the calls in the XMSSMT
        routine become vacuous (i.e. the loop only iterates once, and address
        management can be simplified a bit).*/
-    return thresholdmt_core_sign(params, ts_sm, hleper_file, sm, smlen, m, mlen);
+    return thresholdmt_core_sign(params, sk, ts_sm, hleper_file, sm, smlen, m, mlen);
 }
 
 /**
  * Signs a message. Returns an array containing the signature followed by the
  * message and an updated secret key.
  */
-int thresholdmt_core_sign(const xmss_params *params,
+int thresholdmt_core_sign(const xmss_params *params, unsigned char *sk,
                      unsigned char **ts_sm, FILE *hleper_file, 
                      unsigned char *sm, unsigned long long *smlen,
                      const unsigned char *m, unsigned long long mlen)
 {
-    const unsigned char *sk_seed = sk + params->index_bytes;
+//    const unsigned char *sk_seed = sk + params->index_bytes;
     const unsigned char *sk_prf = sk + params->index_bytes + params->n;
     const unsigned char *pub_root = sk + params->index_bytes + 2*params->n;
     const unsigned char *pub_seed = sk + params->index_bytes + 3*params->n;
